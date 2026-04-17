@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getSurvivalApiUrl } from "./config/api";
 
 const SCREEN = {
   LANDING: "landing",
@@ -8,27 +9,30 @@ const SCREEN = {
 };
 
 const loadingLines = [
-  "Reading your castaway instincts...",
-  "Cross-checking panic levels...",
-  "Consulting dramatic island physics...",
-  "Calculating your questionable fate..."
+  "Checking your castaway instincts...",
+  "Searching the island for coconuts...",
+  "Consulting survival gods...",
+  "Building your suspicious future..."
 ];
+const LANDING_LINE =
+  "You're stranded on a desert island. Pick 3 items to maximize how many days you survive.";
+const LANDING_TYPEWRITER_SEEN_KEY = "marooned_landing_typewriter_seen";
 
 function normalizeValue(value) {
   return value.toLowerCase().trim().replace(/\s+/g, " ");
 }
 
-function getSurvivalApiUrl() {
-  const envBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim();
-  if (envBaseUrl) {
-    return `${envBaseUrl.replace(/\/+$/, "")}/api/survival`;
-  }
-
-  if (import.meta.env.DEV) {
-    return "http://localhost:3001/api/survival";
-  }
-
-  return "/api/survival";
+function LogoWord() {
+  return (
+    <h1 className="logo-word" aria-label="Marooned!">
+      <span className="arc-left">Mar</span>
+      <span className="coconut-pair arc-center" aria-hidden="true">
+        <span className="coconut" />
+        <span className="coconut" />
+      </span>
+      <span className="arc-right">ned!</span>
+    </h1>
+  );
 }
 
 function getResultMood(days) {
@@ -37,46 +41,23 @@ function getResultMood(days) {
   return "defeated";
 }
 
-function getResultReaction(days) {
-  if (days >= 61) return "You may be annoyingly good at this.";
-  if (days >= 31) return "You packed like a pro castaway.";
-  if (days >= 13) return "This might keep you alive. Briefly.";
-  if (days >= 4) return "Bold plan. Very unstable.";
-  return "You packed like this was spring break.";
-}
-
 function IslandScene({ mood, screen }) {
-  const bubbleText =
-    screen === SCREEN.LOADING
-      ? "thinking..."
-      : mood === "happy"
-        ? "easy."
-        : mood === "stressed"
-          ? "hmm."
-          : mood === "defeated"
-            ? "oh no."
-            : "survive?";
-
   return (
-    <div className="scene-root" aria-hidden="true">
-      <div className="scene-glow" />
+    <div className="scene-layer" aria-hidden="true">
       <div className="scene-sun" />
-
       <div className="scene-water">
-        <div className="wave wave-1" />
-        <div className="wave wave-2" />
-        <div className="wave wave-3" />
+        <div className="wave wave-a" />
+        <div className="wave wave-b" />
+        <div className="wave wave-c" />
       </div>
 
       <div className="island-wrap">
-        <div className="island-shadow" />
         <div className="island-main">
           <div className="island-ridge" />
-
           <div className="palm-trunk" />
-          <div className="palm-leaf leaf-a" />
-          <div className="palm-leaf leaf-b" />
-          <div className="palm-leaf leaf-c" />
+          <div className="palm-leaf leaf-1" />
+          <div className="palm-leaf leaf-2" />
+          <div className="palm-leaf leaf-3" />
 
           <div className={`castaway castaway-${mood}`}>
             <div className="castaway-head" />
@@ -86,33 +67,70 @@ function IslandScene({ mood, screen }) {
           </div>
         </div>
       </div>
-
-      <p className="scene-bubble">{bubbleText}</p>
     </div>
   );
 }
 
-function LandingPanel({ onStart }) {
+function LandingContent({ onStart }) {
+  const [typedLine, setTypedLine] = useState(() => {
+    try {
+      const hasSeenTypewriter = sessionStorage.getItem(LANDING_TYPEWRITER_SEEN_KEY) === "1";
+      return hasSeenTypewriter ? LANDING_LINE : "";
+    } catch (error) {
+      return "";
+    }
+  });
+
+  useEffect(() => {
+    if (typedLine === LANDING_LINE) {
+      return undefined;
+    }
+
+    try {
+      sessionStorage.setItem(LANDING_TYPEWRITER_SEEN_KEY, "1");
+    } catch (error) {
+      // Ignore storage errors and continue with in-memory behavior.
+    }
+
+    let index = 0;
+    setTypedLine("");
+
+    const intervalId = setInterval(() => {
+      index += 1;
+      setTypedLine(LANDING_LINE.slice(0, index));
+      if (index >= LANDING_LINE.length) {
+        clearInterval(intervalId);
+      }
+    }, 22);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <>
-      <p className="panel-eyebrow">Mini Survival Story</p>
-      <h1 className="panel-title">Marooned</h1>
-      <p className="panel-subtitle">Pick 3 items. Hope for the best.</p>
-      <button type="button" onClick={onStart} className="btn btn-primary">
+      <p className="eyebrow">Mini Survival Game</p>
+      <LogoWord />
+      <p className="subtitle landing-typewriter">
+        {typedLine}
+        <span className="type-caret" aria-hidden="true">
+          |
+        </span>
+      </p>
+      <button type="button" className="btn btn-primary" onClick={onStart}>
         Start Packing
       </button>
     </>
   );
 }
 
-function EntryPanel({ values, errors, apiError, onChange, onSubmit, onBack }) {
+function EntryContent({ values, errors, apiError, onChange, onSubmit, onBack }) {
   return (
     <>
-      <p className="panel-eyebrow">Loadout</p>
-      <h1 className="panel-title panel-title-sm">Pick Your 3 Items</h1>
-      <p className="panel-subtitle panel-subtitle-sm">No duplicates. No miracles.</p>
+      <p className="eyebrow">Loadout</p>
+      <h2 className="screen-title">Pick Your 3 Items</h2>
+      <p className="subtitle subtitle-sm">No duplicates. No miracles.</p>
 
-      <form onSubmit={onSubmit} className="entry-form">
+      <form className="entry-form" onSubmit={onSubmit}>
         {[0, 1, 2].map((index) => (
           <label key={index} className="field">
             <span>Item {index + 1}</span>
@@ -126,14 +144,14 @@ function EntryPanel({ values, errors, apiError, onChange, onSubmit, onBack }) {
         ))}
 
         {errors.length > 0 ? (
-          <div className="inline-note inline-note-error">
+          <div className="inline-error">
             {errors.map((error) => (
               <p key={error}>{error}</p>
             ))}
           </div>
         ) : null}
 
-        {apiError ? <div className="inline-note inline-note-error">{apiError}</div> : null}
+        {apiError ? <div className="inline-error">{apiError}</div> : null}
 
         <div className="button-row">
           <button type="submit" className="btn btn-primary">
@@ -148,12 +166,12 @@ function EntryPanel({ values, errors, apiError, onChange, onSubmit, onBack }) {
   );
 }
 
-function LoadingPanel({ line }) {
+function LoadingContent({ line }) {
   return (
     <>
-      <p className="panel-eyebrow">Simulation</p>
-      <h1 className="panel-title panel-title-sm">Island Judgment In Progress</h1>
-      <p className="panel-subtitle panel-subtitle-sm">{line}</p>
+      <p className="eyebrow">Simulation</p>
+      <h2 className="screen-title">Island Judgment In Progress</h2>
+      <p className="subtitle subtitle-sm">{line}</p>
       <div className="loading-dots" aria-hidden="true">
         <span />
         <span />
@@ -163,14 +181,15 @@ function LoadingPanel({ line }) {
   );
 }
 
-function ResultsPanel({ result, selectedItems, onPlayAgain }) {
+function ResultContent({ result, selectedItems, onPlayAgain }) {
   return (
     <>
-      <p className="panel-eyebrow">Result</p>
-      <h1 className="score-hero">{result.days}</h1>
-      <p className="score-label">Survival Days</p>
-      <p className="score-reaction">{getResultReaction(result.days)}</p>
-      <p className="score-summary">{result.explanation}</p>
+      <p className="eyebrow">Result</p>
+      <h2 className="screen-title">Survival Report</h2>
+      <p className="subtitle subtitle-sm">{result.rating}</p>
+      <p className="result-days">{result.days}</p>
+      <p className="result-label">Survival Days</p>
+      <p className="result-summary">{result.explanation}</p>
 
       <div className="chip-grid">
         {selectedItems.map((item) => (
@@ -259,15 +278,19 @@ function App() {
     try {
       const response = await fetch(getSurvivalApiUrl(), {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: trimmed })
       });
 
-      const data = await response.json();
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        throw new Error("Scoring response was invalid. Please try again.");
+      }
+
       if (!response.ok) {
-        throw new Error(data.error || "The island is ignoring us. Please try again.");
+        throw new Error(data.error || "Failed to fetch survival score.");
       }
 
       const elapsedMs = Date.now() - loadingStartedAt;
@@ -285,7 +308,7 @@ function App() {
       setScreen(SCREEN.RESULTS);
     } catch (error) {
       setScreen(SCREEN.ENTRY);
-      setApiError(error.message || "Something went wrong. Please try again.");
+      setApiError(error.message || "Failed to fetch survival score.");
     }
   }
 
@@ -300,11 +323,13 @@ function App() {
 
   return (
     <main className="app-root">
-      <div className="layout-split">
-        <section className="content-pane">
-          {screen === SCREEN.LANDING ? <LandingPanel onStart={handleStart} /> : null}
+      <IslandScene mood={mood} screen={screen} />
+
+      <section className="center-stage">
+        <div className="content-flow">
+          {screen === SCREEN.LANDING ? <LandingContent onStart={handleStart} /> : null}
           {screen === SCREEN.ENTRY ? (
-            <EntryPanel
+            <EntryContent
               values={itemValues}
               errors={errors}
               apiError={apiError}
@@ -313,16 +338,12 @@ function App() {
               onBack={handleBackToLanding}
             />
           ) : null}
-          {screen === SCREEN.LOADING ? <LoadingPanel line={loadingLines[loadingLineIndex]} /> : null}
+          {screen === SCREEN.LOADING ? <LoadingContent line={loadingLines[loadingLineIndex]} /> : null}
           {screen === SCREEN.RESULTS && result ? (
-            <ResultsPanel result={result} selectedItems={selectedItems} onPlayAgain={handlePlayAgain} />
+            <ResultContent result={result} selectedItems={selectedItems} onPlayAgain={handlePlayAgain} />
           ) : null}
-        </section>
-
-        <section className="scene-pane">
-          <IslandScene mood={mood} screen={screen} />
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }

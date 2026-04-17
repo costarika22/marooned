@@ -2,7 +2,7 @@ const items = [
   {
     id: "water_bottle",
     name: "Water Bottle",
-    aliases: ["bottle", "metal bottle", "canteen"],
+    aliases: ["water", "bottle", "metal bottle", "canteen", "drinking water"],
     baseScore: 8,
     categories: ["water"]
   },
@@ -26,6 +26,13 @@ const items = [
     aliases: ["beans", "cans", "canned beans", "food cans"],
     baseScore: 7,
     categories: ["food"]
+  },
+  {
+    id: "banana",
+    name: "Banana",
+    aliases: ["bananas", "fruit", "ripe banana"],
+    baseScore: 3,
+    categories: ["food", "comfort"]
   },
   {
     id: "tarp",
@@ -170,7 +177,7 @@ const items = [
   {
     id: "cooking_pot",
     name: "Cooking Pot",
-    aliases: ["pot", "camp pot", "boiling pot"],
+    aliases: ["pot", "camp pot", "boiling pot", "cup", "metal cup", "mug"],
     baseScore: 7,
     categories: ["food", "water", "tools"]
   },

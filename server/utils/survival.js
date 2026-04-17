@@ -40,13 +40,13 @@ function determineRatingLabel(days) {
 
 function getCategoryWeight(category) {
   const weights = {
-    water: 6,
-    food: 4,
-    shelter: 3,
-    fire: 3,
-    rescue: 3,
-    tools: 2,
-    medical: 2,
+    water: 8,
+    food: 5,
+    shelter: 4,
+    fire: 4,
+    rescue: 4,
+    tools: 3,
+    medical: 3,
     defense: 1,
     comfort: 0
   };
@@ -56,7 +56,7 @@ function getCategoryWeight(category) {
 
 function getItemUsefulnessScore(item) {
   const categoryScore = Math.max(...item.categories.map((category) => getCategoryWeight(category)), 0);
-  const basePart = Math.round(item.baseScore * 0.45);
+  const basePart = Math.round(item.baseScore * 0.6);
   return Math.max(1, basePart + categoryScore);
 }
 
@@ -122,7 +122,7 @@ function calculateSurvivalScore({ inputs, items, comboBonuses }) {
   const unknownReactions = [];
   const duplicateNotes = [];
 
-  // Baseline is now zero so weak choices can legitimately bottom out.
+  // Baseline is zero so weak choices can legitimately bottom out.
   let score = 0;
   let repeatedPenalty = 0;
 
@@ -191,15 +191,15 @@ function calculateSurvivalScore({ inputs, items, comboBonuses }) {
     categoryScore += getCategoryWeight(category);
   }
 
-  // Core needs matter much more than before.
+  // Core needs matter more than secondary categories.
   if (coveredCategories.has("water") && coveredCategories.has("food")) {
-    categoryScore += 8;
+    categoryScore += 10;
   }
   if (coveredCategories.has("water") && (coveredCategories.has("shelter") || coveredCategories.has("fire"))) {
-    categoryScore += 7;
+    categoryScore += 9;
   }
   if (coveredCategories.has("water") && coveredCategories.has("rescue")) {
-    categoryScore += 5;
+    categoryScore += 8;
   }
 
   score += categoryScore;
@@ -220,13 +220,13 @@ function calculateSurvivalScore({ inputs, items, comboBonuses }) {
 
   // If all choices were unknown/blank, survival should be harsh.
   if (uniqueKnownIds.size === 0) {
-    score -= 2;
+    score -= 3;
   }
 
   // Missing core needs should hurt outcomes, even with decent gear.
   if (!coveredCategories.has("water")) score -= 10;
-  if (!coveredCategories.has("food")) score -= 3;
-  if (!coveredCategories.has("shelter") && !coveredCategories.has("fire")) score -= 4;
+  if (!coveredCategories.has("food")) score -= 4;
+  if (!coveredCategories.has("shelter") && !coveredCategories.has("fire")) score -= 5;
 
   score -= repeatedPenalty;
 
