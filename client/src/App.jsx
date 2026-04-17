@@ -14,6 +14,19 @@ const loadingLines = [
   "Consulting dramatic island spirits..."
 ];
 
+function getSurvivalApiUrl() {
+  const envBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim();
+  if (envBaseUrl) {
+    return `${envBaseUrl.replace(/\/+$/, "")}/api/survival`;
+  }
+
+  if (import.meta.env.DEV) {
+    return "http://localhost:3001/api/survival";
+  }
+
+  return "/api/survival";
+}
+
 function normalizeValue(value) {
   return value.toLowerCase().trim().replace(/\s+/g, " ");
 }
@@ -287,7 +300,7 @@ function App() {
     const loadingStartedAt = Date.now();
 
     try {
-      const response = await fetch("http://localhost:3001/api/survival", {
+      const response = await fetch(getSurvivalApiUrl(), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
