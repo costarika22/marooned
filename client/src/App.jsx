@@ -8,11 +8,15 @@ const SCREEN = {
 };
 
 const loadingLines = [
-  "Interviewing coconuts...",
-  "Reading panic levels...",
-  "Checking your chaos-to-survival ratio...",
-  "Consulting dramatic island spirits..."
+  "Reading your castaway instincts...",
+  "Cross-checking panic levels...",
+  "Consulting dramatic island physics...",
+  "Calculating your questionable fate..."
 ];
+
+function normalizeValue(value) {
+  return value.toLowerCase().trim().replace(/\s+/g, " ");
+}
 
 function getSurvivalApiUrl() {
   const envBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim();
@@ -27,10 +31,6 @@ function getSurvivalApiUrl() {
   return "/api/survival";
 }
 
-function normalizeValue(value) {
-  return value.toLowerCase().trim().replace(/\s+/g, " ");
-}
-
 function getResultMood(days) {
   if (days >= 31) return "happy";
   if (days >= 13) return "stressed";
@@ -39,183 +39,151 @@ function getResultMood(days) {
 
 function getResultReaction(days) {
   if (days >= 61) return "You may be annoyingly good at this.";
-  if (days >= 31) return "Finally, someone brought real survival gear.";
+  if (days >= 31) return "You packed like a pro castaway.";
   if (days >= 13) return "This might keep you alive. Briefly.";
-  if (days >= 4) return "Bold. Not smart.";
+  if (days >= 4) return "Bold plan. Very unstable.";
   return "You packed like this was spring break.";
 }
 
-function HeaderText({ screen, result }) {
-  if (screen === SCREEN.RESULTS && result) {
-    return (
-      <>
-        <p className="scene-tag">Result</p>
-        <h1 className="scene-title">Castaway Report</h1>
-        <p className="scene-subtitle">{result.rating}</p>
-      </>
-    );
-  }
-
-  if (screen === SCREEN.LOADING) {
-    return (
-      <>
-        <p className="scene-tag">Simulation</p>
-        <h1 className="scene-title">Island Judging You</h1>
-        <p className="scene-subtitle">Please remain dramatically calm.</p>
-      </>
-    );
-  }
-
-  if (screen === SCREEN.ENTRY) {
-    return (
-      <>
-        <p className="scene-tag">Loadout</p>
-        <h1 className="scene-title">Pick Your 3 Items</h1>
-        <p className="scene-subtitle">No duplicates. No miracles.</p>
-      </>
-    );
-  }
+function IslandScene({ mood, screen }) {
+  const bubbleText =
+    screen === SCREEN.LOADING
+      ? "thinking..."
+      : mood === "happy"
+        ? "easy."
+        : mood === "stressed"
+          ? "hmm."
+          : mood === "defeated"
+            ? "oh no."
+            : "survive?";
 
   return (
-    <>
-      <p className="scene-tag">Mini survival game</p>
-      <h1 className="scene-title">Marooned</h1>
-      <p className="scene-subtitle">Pick 3 items. Hope for the best.</p>
-    </>
-  );
-}
-
-function IslandScene({ mood, speech, screen }) {
-  return (
-    <section className="scene-stage" aria-hidden="true">
+    <div className="scene-root" aria-hidden="true">
+      <div className="scene-glow" />
       <div className="scene-sun" />
-      <div className="scene-cloud cloud-1" />
-      <div className="scene-cloud cloud-2" />
-      <div className="scene-ocean">
-        <div className="wave wave-a" />
-        <div className="wave wave-b" />
-        <div className="wave wave-c" />
+
+      <div className="scene-water">
+        <div className="wave wave-1" />
+        <div className="wave wave-2" />
+        <div className="wave wave-3" />
       </div>
 
-      <div className={`scene-island ${screen === SCREEN.RESULTS ? "scene-island-result" : ""}`}>
-        <div className="island-ridge" />
-        <div className="palm-trunk" />
-        <div className="palm-leaf leaf-1" />
-        <div className="palm-leaf leaf-2" />
-        <div className="palm-leaf leaf-3" />
+      <div className="island-wrap">
+        <div className="island-shadow" />
+        <div className="island-main">
+          <div className="island-ridge" />
 
-        <div className={`castaway castaway-${mood}`}>
-          <div className="castaway-head" />
-          <div className="castaway-body" />
-          <div className="castaway-arm arm-left" />
-          <div className="castaway-arm arm-right" />
-          <div className="castaway-leg leg-left" />
-          <div className="castaway-leg leg-right" />
+          <div className="palm-trunk" />
+          <div className="palm-leaf leaf-a" />
+          <div className="palm-leaf leaf-b" />
+          <div className="palm-leaf leaf-c" />
+
+          <div className={`castaway castaway-${mood}`}>
+            <div className="castaway-head" />
+            <div className="castaway-body" />
+            <div className="castaway-arm arm-left" />
+            <div className="castaway-arm arm-right" />
+          </div>
         </div>
-
-        {mood === "thinking" ? <div className="thought-dot thought-dot-1" /> : null}
-        {mood === "thinking" ? <div className="thought-dot thought-dot-2" /> : null}
       </div>
 
-      <p className="scene-speech">{speech}</p>
-    </section>
-  );
-}
-
-function LandingActions({ onStart }) {
-  return (
-    <div className="action-wrap">
-      <div className="action-dock action-dock-landing">
-        <p className="dock-line">One tiny island. Three bad decisions.</p>
-        <button type="button" onClick={onStart} className="action-btn-primary">
-          Start Packing
-        </button>
-      </div>
+      <p className="scene-bubble">{bubbleText}</p>
     </div>
   );
 }
 
-function EntryActions({ values, errors, apiError, onChange, onSubmit, onBack }) {
+function LandingPanel({ onStart }) {
   return (
-    <form onSubmit={onSubmit} className="action-wrap">
-      <div className="action-dock action-dock-entry">
-        <div className="entry-grid">
-          {[0, 1, 2].map((index) => (
-            <label key={index} className="entry-field">
-              <span className="entry-label">Item {index + 1}</span>
-              <input
-                type="text"
-                value={values[index]}
-                onChange={(event) => onChange(index, event.target.value)}
-                placeholder={index === 0 ? "Water filter" : index === 1 ? "Tarp" : "Flare gun"}
-              />
-            </label>
-          ))}
-        </div>
+    <>
+      <p className="panel-eyebrow">Mini Survival Story</p>
+      <h1 className="panel-title">Marooned</h1>
+      <p className="panel-subtitle">Pick 3 items. Hope for the best.</p>
+      <button type="button" onClick={onStart} className="btn btn-primary">
+        Start Packing
+      </button>
+    </>
+  );
+}
+
+function EntryPanel({ values, errors, apiError, onChange, onSubmit, onBack }) {
+  return (
+    <>
+      <p className="panel-eyebrow">Loadout</p>
+      <h1 className="panel-title panel-title-sm">Pick Your 3 Items</h1>
+      <p className="panel-subtitle panel-subtitle-sm">No duplicates. No miracles.</p>
+
+      <form onSubmit={onSubmit} className="entry-form">
+        {[0, 1, 2].map((index) => (
+          <label key={index} className="field">
+            <span>Item {index + 1}</span>
+            <input
+              type="text"
+              value={values[index]}
+              onChange={(event) => onChange(index, event.target.value)}
+              placeholder={index === 0 ? "Water filter" : index === 1 ? "Tarp" : "Flare gun"}
+            />
+          </label>
+        ))}
 
         {errors.length > 0 ? (
-          <div className="status-note status-note-error">
+          <div className="inline-note inline-note-error">
             {errors.map((error) => (
               <p key={error}>{error}</p>
             ))}
           </div>
         ) : null}
 
-        {apiError ? <div className="status-note status-note-error">{apiError}</div> : null}
+        {apiError ? <div className="inline-note inline-note-error">{apiError}</div> : null}
 
-        <div className="action-row">
-          <button type="submit" className="action-btn-primary">
+        <div className="button-row">
+          <button type="submit" className="btn btn-primary">
             Check My Odds
           </button>
-          <button type="button" onClick={onBack} className="action-btn-secondary">
+          <button type="button" className="btn btn-secondary" onClick={onBack}>
             Back
           </button>
         </div>
-      </div>
-    </form>
+      </form>
+    </>
   );
 }
 
-function LoadingActions({ line }) {
+function LoadingPanel({ line }) {
   return (
-    <div className="action-wrap">
-      <div className="action-dock action-dock-loading">
-        <p className="dock-line">{line}</p>
-        <div className="dot-loader" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
+    <>
+      <p className="panel-eyebrow">Simulation</p>
+      <h1 className="panel-title panel-title-sm">Island Judgment In Progress</h1>
+      <p className="panel-subtitle panel-subtitle-sm">{line}</p>
+      <div className="loading-dots" aria-hidden="true">
+        <span />
+        <span />
+        <span />
       </div>
-    </div>
+    </>
   );
 }
 
-function ResultActions({ items, result, onPlayAgain }) {
+function ResultsPanel({ result, selectedItems, onPlayAgain }) {
   return (
-    <div className="action-wrap">
-      <div className="action-dock action-dock-result">
-        <div className="result-hero">
-          <p className="result-days">{result.days}</p>
-          <p className="result-label">Days</p>
-        </div>
+    <>
+      <p className="panel-eyebrow">Result</p>
+      <h1 className="score-hero">{result.days}</h1>
+      <p className="score-label">Survival Days</p>
+      <p className="score-reaction">{getResultReaction(result.days)}</p>
+      <p className="score-summary">{result.explanation}</p>
 
-        <p className="result-reaction">{getResultReaction(result.days)}</p>
-        <p className="result-explanation">{result.explanation}</p>
-
-        <div className="chip-row">
-          {items.map((item) => (
-            <span key={item} className="item-chip">
-              {item}
-            </span>
-          ))}
-        </div>
-
-        <button type="button" onClick={onPlayAgain} className="action-btn-primary">
-          Play Again
-        </button>
+      <div className="chip-grid">
+        {selectedItems.map((item) => (
+          <span key={item} className="chip">
+            {item}
+          </span>
+        ))}
       </div>
-    </div>
+
+      <button type="button" className="btn btn-primary" onClick={onPlayAgain}>
+        Play Again
+      </button>
+    </>
   );
 }
 
@@ -238,21 +206,10 @@ function App() {
     return () => clearInterval(intervalId);
   }, [screen]);
 
-  const sceneMood = useMemo(() => {
+  const mood = useMemo(() => {
     if (screen === SCREEN.LOADING) return "thinking";
     if (screen === SCREEN.RESULTS && result) return getResultMood(result.days);
     return "idle";
-  }, [screen, result]);
-
-  const speechLine = useMemo(() => {
-    if (screen === SCREEN.LOADING) return "uh oh";
-    if (screen === SCREEN.RESULTS && result) {
-      if (result.days >= 31) return "nailed it";
-      if (result.days >= 13) return "still breathing";
-      return "send help";
-    }
-    if (screen === SCREEN.ENTRY) return "choose wisely";
-    return "tiny panic";
   }, [screen, result]);
 
   function handleInputChange(index, value) {
@@ -342,28 +299,30 @@ function App() {
   }
 
   return (
-    <main className="marooned-app">
-      <header className="scene-header">
-        <HeaderText screen={screen} result={result} />
-      </header>
+    <main className="app-root">
+      <div className="layout-split">
+        <section className="content-pane">
+          {screen === SCREEN.LANDING ? <LandingPanel onStart={handleStart} /> : null}
+          {screen === SCREEN.ENTRY ? (
+            <EntryPanel
+              values={itemValues}
+              errors={errors}
+              apiError={apiError}
+              onChange={handleInputChange}
+              onSubmit={handleSubmit}
+              onBack={handleBackToLanding}
+            />
+          ) : null}
+          {screen === SCREEN.LOADING ? <LoadingPanel line={loadingLines[loadingLineIndex]} /> : null}
+          {screen === SCREEN.RESULTS && result ? (
+            <ResultsPanel result={result} selectedItems={selectedItems} onPlayAgain={handlePlayAgain} />
+          ) : null}
+        </section>
 
-      <IslandScene mood={sceneMood} speech={speechLine} screen={screen} />
-
-      {screen === SCREEN.LANDING ? <LandingActions onStart={handleStart} /> : null}
-      {screen === SCREEN.ENTRY ? (
-        <EntryActions
-          values={itemValues}
-          errors={errors}
-          apiError={apiError}
-          onChange={handleInputChange}
-          onSubmit={handleSubmit}
-          onBack={handleBackToLanding}
-        />
-      ) : null}
-      {screen === SCREEN.LOADING ? <LoadingActions line={loadingLines[loadingLineIndex]} /> : null}
-      {screen === SCREEN.RESULTS && result ? (
-        <ResultActions items={selectedItems} result={result} onPlayAgain={handlePlayAgain} />
-      ) : null}
+        <section className="scene-pane">
+          <IslandScene mood={mood} screen={screen} />
+        </section>
+      </div>
     </main>
   );
 }
