@@ -1,0 +1,13 @@
+{
+  "name": "marooned",
+  "private": true,
+  "scripts": {
+    "setup": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
